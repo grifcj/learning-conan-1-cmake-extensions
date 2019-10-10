@@ -5,7 +5,10 @@ base = python_requires("conanbase/[*]@grifcj/stable")
 class CMakeModulesConanFile(ConanFile):
     name = "cmake-modules"
     version = base.get_version()
-    exports_sources = "FindSourcePackage.cmake"
+    exports_sources = "*.cmake"
+
+    def build(self):
+        pass
 
     def package(self):
         self.copy("*.cmake", "", "")
