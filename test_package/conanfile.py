@@ -5,6 +5,6 @@ class TestConan(ConanFile):
 
     def test(self):
         cmake = CMake(self)
-        modulesPath = self.deps_cpp_info["cmake-modules"].rootpath
+        modulesPath = self.deps_cpp_info["cmake_modules"].rootpath
         cmake.definitions["CMAKE_MODULE_PATH"] = modulesPath
         cmake.configure()
