@@ -7,3 +7,6 @@ class CMakeModulesConanFile(ConanFile):
     version = base.get_version()
     exports_sources = "FindSourcePackage.cmake"
 
+    def package(self):
+        self.copy("*.cmake", "", "")
+
