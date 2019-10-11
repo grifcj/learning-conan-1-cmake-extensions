@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(PackageTest CXX)
 
-include(FindSourcePackage)
+include("${CMAKE_BINARY_DIR}/conan_paths.cmake")
+
+include(CMakeExtensions)
 declare_source_package(package)
 
 if (package_DIR STREQUAL ${CMAKE_BINARY_DIR}/__pkg/package/packageConfig.cmake)
