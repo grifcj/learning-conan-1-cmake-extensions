@@ -1,10 +1,8 @@
-from conans import ConanFile, python_requires
-
-base = python_requires("conanbase/[*]@grifcj/stable")
+from conans import ConanFile, python_requires, tools
 
 class CMakeExtensionsConanFile(ConanFile):
     name = "cmake_extensions"
-    version = base.get_version()
+    version = "1.0.0-nightly"
     exports_sources = "*.cmake"
 
     def build(self):
