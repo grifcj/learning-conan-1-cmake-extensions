@@ -1,9 +1,19 @@
+include_guard(GLOBAL)
+
 ################################################################################
 # FIND PACKAGE
 
 macro(declare_source_package name)
-   file(WRITE "${PROJECT_BINARY_DIR}/__pkg/${name}/${name}Config.cmake")
-   set(${name}_DIR "${PROJECT_BINARY_DIR}/__pkg/${name}" CACHE PATH "")
+	list(APPEND SRC_PKGS ${name})
+endmacro()
+
+macro(find_package name)
+	if (${name} IN_LIST SRC_PKGS)
+		message(STATUS "find_package ignored for ${name}")
+	else()
+		unset(${name}_DIR CACHE)
+		_find_package(${ARGV})
+	endif()
 endmacro()
 
 ################################################################################
@@ -16,7 +26,7 @@ function(install_project_config)
    set(name ${PROJECT_NAME})
 
    configure_package_config_file(
-      ${PROJECT_SOURCE_DIR}/cmake/${name}Config.cmake.in
+		${CMAKE_CURRENT_LIST_DIR}/cmake/${name}Config.cmake.in
       ${PROJECT_BINARY_DIR}/cmake/${name}Config.cmake
       INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${name}
    )
@@ -60,7 +70,7 @@ function(install_project_headers)
    set(name ${PROJECT_NAME})
 
    install(
-      DIRECTORY ${PROJECT_SOURCE_DIR}/include/${name}
+      DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/${name}
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
    )
 endfunction()
@@ -69,5 +79,37 @@ function(install_project)
    install_project_config()
    install_project_targets()
    install_project_headers()
+endfunction()
+
+function(generate_cpp_info)
+	foreach(target ${ARGV})
+		message(STATUS "Evaluate target: ${target}")
+		if (NOT TARGET ${target})
+			message(FATAL_ERROR "Argument \"${target}\" is not a target. Cannot export cpp_info.")
+		endif()
+
+		get_target_property(INCLUDE_DIRS ${target} INTERFACE_INCLUDE_DIRECTORIES)
+		string(REPLACE "$<BUILD_INTERFACE:" "$<1:" BUILD_INCLUDE_DIRS "${INCLUDE_DIRS}")
+		string(REPLACE "$<INSTALL_INTERFACE:" "$<0:" BUILD_INCLUDE_DIRS "${BUILD_INCLUDE_DIRS}")
+		string(REPLACE "$<BUILD_INTERFACE:" "$<0:" INSTALL_INCLUDE_DIRS "${INCLUDE_DIRS}")
+		string(REPLACE "$<INSTALL_INTERFACE:" "$<1:" INSTALL_INCLUDE_DIRS "${INSTALL_INCLUDE_DIRS}")
+
+		find_file(template_file "target-cpp-info-template.json.in")
+		if (template_file)
+			configure_file(
+				${template_file}
+				${CMAKE_BINARY_DIR}/target-${target}-cpp-info-template.json
+				)
+			file(GENERATE
+				OUTPUT ${CMAKE_BINARY_DIR}/target-${target}-cpp-info.json
+				INPUT ${CMAKE_BINARY_DIR}/target-${target}-cpp-info-template.json)
+
+			# Erase cache variable set by find
+			unset(template_file CACHE)
+		else()
+			message(FATAL_ERROR "Template file not found. Have CMAKE_INCLUDE_PATH "
+				"or CMAKE_MODULE_PATH been set to include package directory?")
+		endif()
+	endforeach()
 endfunction()
 
